@@ -288,9 +288,7 @@
     <section class="hero" id="hero">
       <div class="hero-media" id="heroMedia">
         <div class="poster"></div>
-        <video id="heroVideo" muted loop playsinline preload="metadata">
-          <source src="videos/raz-showreel.mp4" type="video/mp4" />
-        </video>
+        <video id="heroVideo" muted playsinline preload="metadata"></video>
       </div>
       <div class="hero-scrim-top"></div>
       <div class="hero-scrim-bottom"></div>
@@ -486,14 +484,29 @@
   menuBtn.addEventListener('click',function(){overlay.classList.toggle('open');});
   overlay.querySelectorAll('[data-close]').forEach(function(a){a.addEventListener('click',function(){overlay.classList.remove('open');});});
 
-  // ---- hero showreel video + scroll transition ----
+  // ---- hero showreel video (cycling clips) + scroll transition ----
   var heroVideo=document.getElementById('heroVideo');
   var reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var showreelClips=['videos/raz-showreel.mp4','videos/raz-showreel-3.mp4','videos/raz-showreel-2.mp4'];
   if(heroVideo){
     if(!reduceMotion){
-      heroVideo.addEventListener('loadeddata',function(){heroVideo.classList.add('loaded');heroVideo.play().catch(function(){});});
+      var clipIndex=0;
+      function playClip(i){
+        heroVideo.classList.remove('loaded');
+        window.setTimeout(function(){
+          heroVideo.src=showreelClips[i];
+          heroVideo.load();
+          heroVideo.play().catch(function(){});
+        },260);
+      }
+      heroVideo.addEventListener('loadeddata',function(){heroVideo.classList.add('loaded');});
       heroVideo.addEventListener('error',function(){heroVideo.style.display='none';});
       setTimeout(function(){ if(!heroVideo.classList.contains('loaded')){ heroVideo.style.display='none'; } },1800);
+      playClip(clipIndex);
+      setInterval(function(){
+        clipIndex=(clipIndex+1)%showreelClips.length;
+        playClip(clipIndex);
+      },4000);
 
       var heroSection=document.getElementById('hero');
       var heroMedia=document.getElementById('heroMedia');
