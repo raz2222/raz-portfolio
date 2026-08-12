@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 
 const WORK_ITEMS = [
-  { title: "Aperture", desc: "A visual identity system for a photography collective.", thumb: "thumb-1" },
-  { title: "Meridian", desc: "Product design & front-end build for a fintech dashboard.", thumb: "thumb-2" },
-  { title: "Northline", desc: "Editorial site and motion system for an independent label.", thumb: "thumb-3" },
-  { title: "Faultline", desc: "Interactive data-story built for a climate research lab.", thumb: "thumb-4" },
+  { title: "Aperture", desc: "A visual identity system for a photography collective.", seed: "raz-work-1" },
+  { title: "Meridian", desc: "Product design & front-end build for a fintech dashboard.", seed: "raz-work-2" },
+  { title: "Northline", desc: "Editorial site and motion system for an independent label.", seed: "raz-work-3" },
+  { title: "Faultline", desc: "Interactive data-story built for a climate research lab.", seed: "raz-work-4" },
 ];
 
-const THUMB_STYLES: Record<string, string> = {
-  "thumb-1": "bg-[radial-gradient(70%_70%_at_30%_20%,#3a3a36,transparent_60%),radial-gradient(60%_60%_at_80%_80%,#232320,transparent_60%),#151513]",
-  "thumb-2": "bg-[radial-gradient(70%_70%_at_70%_30%,#3a3630,transparent_60%),radial-gradient(60%_60%_at_20%_80%,#232320,transparent_60%),#141412]",
-  "thumb-3": "bg-[radial-gradient(70%_70%_at_40%_70%,#33363a,transparent_60%),radial-gradient(60%_60%_at_80%_20%,#202123,transparent_60%),#121213]",
-  "thumb-4": "bg-[radial-gradient(70%_70%_at_60%_40%,#38352f,transparent_60%),radial-gradient(60%_60%_at_15%_75%,#201f1c,transparent_60%),#131211]",
-};
+function photoStyle(seed: string, w: number, h: number, overlay = "180deg,rgba(11,11,11,0) 40%,rgba(11,11,11,.7) 100%"): React.CSSProperties {
+  return {
+    backgroundImage: `linear-gradient(${overlay}), url('https://picsum.photos/seed/${seed}/${w}/${h}')`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    filter: "grayscale(1) contrast(1.05) brightness(.8)",
+  };
+}
 
 function ArrowIcon() {
   return (
@@ -193,13 +195,29 @@ function Loader({ onDone }: { onDone: () => void }) {
 
   if (hide) return null;
 
+  const loaderImgs = [
+    { seed: "raz-load-1", size: 120, className: "top-[14%] left-[12%]", delay: "0.1s" },
+    { seed: "raz-load-2", size: 90, className: "top-[20%] right-[14%]", delay: "0.4s" },
+    { seed: "raz-load-3", size: 150, className: "bottom-[12%] left-[20%]", delay: "0.2s" },
+    { seed: "raz-load-4", size: 100, className: "bottom-[16%] right-[18%]", delay: "0.5s" },
+  ];
+
   return (
     <div
-      className={`fixed inset-0 bg-background z-[10000] flex flex-col items-center justify-center transition-transform duration-[900ms] ease-[cubic-bezier(0.76,0,0.24,1)] ${
+      className={`fixed inset-0 bg-background z-[10000] flex flex-col items-center justify-center overflow-hidden transition-transform duration-[900ms] ease-[cubic-bezier(0.76,0,0.24,1)] ${
         done ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <div className="flex gap-[0.05em] text-[clamp(48px,9vw,110px)] font-bold tracking-tight font-mono">
+      {loaderImgs.map((img) => (
+        <img
+          key={img.seed}
+          src={`https://picsum.photos/seed/${img.seed}/${img.size * 2}/${img.size * 2}`}
+          alt=""
+          className={`absolute rounded-full object-cover grayscale contrast-[1.05] brightness-75 animate-[razLoaderFloat_2.6s_ease-in-out_infinite] ${img.className}`}
+          style={{ width: img.size, height: img.size, animationDelay: img.delay }}
+        />
+      ))}
+      <div className="relative z-10 flex gap-[0.05em] text-[clamp(48px,9vw,110px)] font-bold tracking-tight font-mono">
         {letters.map((l, i) => (
           <span
             key={l}
@@ -282,7 +300,10 @@ export default function RazPortfolio() {
       <main id="top">
         {/* HERO */}
         <section className="relative min-h-[100dvh] flex flex-col justify-end pb-14 overflow-hidden">
-          <div className="absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_30%_20%,rgba(244,243,238,.10),transparent_60%),radial-gradient(50%_40%_at_80%_70%,rgba(244,243,238,.08),transparent_60%),linear-gradient(160deg,#0b0b0b_0%,#151513_55%,#0b0b0b_100%)]" />
+          <div
+            className="absolute inset-0 -z-10"
+            style={photoStyle("raz-hero", 1800, 1200, "160deg,rgba(11,11,11,.55) 0%,rgba(11,11,11,.75) 55%,rgba(11,11,11,.95) 100%")}
+          />
           <div className="absolute top-28 left-0 right-0 px-5 md:px-16 hidden md:flex justify-between items-start">
             <Reveal className="max-w-[420px] text-[15px] leading-relaxed text-muted-foreground">
               Independent creative &amp; developer. I design and build digital work for people who&apos;d rather stand out than fit in.
@@ -328,7 +349,10 @@ export default function RazPortfolio() {
             </Reveal>
             <div className="grid md:grid-cols-[1.5fr_1fr] gap-10 mt-14">
               <Reveal>
-                <div className="aspect-[16/10] rounded overflow-hidden relative bg-[radial-gradient(80%_80%_at_20%_10%,rgba(244,243,238,.14),transparent_60%),radial-gradient(60%_60%_at_90%_90%,rgba(244,243,238,.10),transparent_60%),#141412]">
+                <div
+                  className="aspect-[16/10] rounded overflow-hidden relative"
+                  style={photoStyle("raz-reel", 1200, 750, "0deg,rgba(11,11,11,.55),rgba(11,11,11,.35)")}
+                >
                   <div className="absolute inset-0 flex items-center justify-center font-mono text-xs uppercase tracking-[0.1em] text-muted-foreground">
                     ▸ watch the reel
                   </div>
@@ -364,7 +388,8 @@ export default function RazPortfolio() {
                   </div>
                   <a
                     href="#"
-                    className={`work-thumb block aspect-[4/3] rounded-sm relative overflow-hidden transition-transform duration-500 hover:scale-[1.02] ${THUMB_STYLES[item.thumb]}`}
+                    className="work-thumb block aspect-[4/3] rounded-sm relative overflow-hidden transition-transform duration-500 hover:scale-[1.02]"
+                    style={photoStyle(item.seed, 800, 600)}
                   >
                     <span className="absolute bottom-3.5 left-3.5 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
                       view →
@@ -398,7 +423,8 @@ export default function RazPortfolio() {
               <Reveal>
                 <div
                   ref={parallaxA}
-                  className="aspect-[3/4] rounded-sm overflow-hidden relative bg-[radial-gradient(70%_70%_at_30%_30%,#3d3a34,transparent_60%),#141311] will-change-transform"
+                  className="aspect-[3/4] rounded-sm overflow-hidden relative will-change-transform"
+                  style={photoStyle("raz-studio-a", 700, 900, "180deg,rgba(11,11,11,0) 45%,rgba(11,11,11,.75) 100%")}
                 >
                   <span className="absolute bottom-4 left-4 font-mono text-[13px] text-muted-foreground">or something unexpected</span>
                 </div>
@@ -406,7 +432,8 @@ export default function RazPortfolio() {
               <Reveal>
                 <div
                   ref={parallaxB}
-                  className="aspect-[3/4] rounded-sm overflow-hidden relative mb-14 bg-[radial-gradient(70%_70%_at_70%_40%,#31353d,transparent_60%),#121214] will-change-transform"
+                  className="aspect-[3/4] rounded-sm overflow-hidden relative mb-14 will-change-transform"
+                  style={photoStyle("raz-studio-b", 700, 900, "180deg,rgba(11,11,11,0) 45%,rgba(11,11,11,.75) 100%")}
                 >
                   <span className="absolute bottom-4 left-4 font-mono text-[13px] text-muted-foreground">detail over decoration</span>
                 </div>
@@ -509,6 +536,11 @@ export default function RazPortfolio() {
         @keyframes razGlitchShift {
           0%, 100% { transform: translateX(0); }
           50% { transform: translateX(-4%); }
+        }
+        @keyframes razLoaderFloat {
+          0% { opacity: 0; transform: translateY(14px) scale(.92); }
+          30%, 70% { opacity: .55; }
+          100% { opacity: 0; transform: translateY(-14px) scale(1.02); }
         }
       `}</style>
     </div>
