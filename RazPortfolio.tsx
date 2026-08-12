@@ -35,6 +35,74 @@ function RazWordmark({ className = "" }: { className?: string }) {
   );
 }
 
+function LiquidWordmark({ className = "" }: { className?: string }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const baseSvgRef = useRef<SVGSVGElement>(null);
+  const gradRef = useRef<SVGRadialGradientElement>(null);
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    const wrap = wrapRef.current, svg = baseSvgRef.current, grad = gradRef.current;
+    if (!wrap || !svg || !grad) return;
+    let tx = 600, ty = 130, gx = 600, gy = 130, raf = 0;
+    const onMove = (e: MouseEvent) => {
+      const r = svg.getBoundingClientRect();
+      tx = ((e.clientX - r.left) / r.width) * 1200;
+      ty = ((e.clientY - r.top) / r.height) * 260;
+    };
+    const loop = () => {
+      gx += (tx - gx) * 0.16;
+      gy += (ty - gy) * 0.16;
+      grad.setAttribute("cx", String(gx));
+      grad.setAttribute("cy", String(gy));
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    wrap.addEventListener("mousemove", onMove);
+    return () => {
+      wrap.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={wrapRef}
+      className={`relative w-full ${className}`}
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+    >
+      <svg ref={baseSvgRef} viewBox="0 0 1200 260" className="w-full h-auto block" aria-label="RAZ">
+        <text x="0" y="220" fontFamily="'Space Grotesk', sans-serif" fontWeight={700} fontSize={240} fill="currentColor">
+          RAZ
+        </text>
+      </svg>
+      <svg
+        viewBox="0 0 1200 260"
+        className="absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-300"
+        style={{ opacity: active ? 1 : 0 }}
+      >
+        <defs>
+          <pattern id="razHeroPattern" patternUnits="userSpaceOnUse" width={1200} height={260}>
+            <image href="https://picsum.photos/seed/raz-liquid/1200/260" x={0} y={0} width={1200} height={260} preserveAspectRatio="xMidYMid slice" />
+          </pattern>
+          <radialGradient ref={gradRef} id="razHeroMaskGrad" gradientUnits="userSpaceOnUse" cx={600} cy={130} r={190}>
+            <stop offset="0%" stopColor="white" />
+            <stop offset="55%" stopColor="white" />
+            <stop offset="100%" stopColor="black" />
+          </radialGradient>
+          <mask id="razHeroMask">
+            <rect x={0} y={0} width={1200} height={260} fill="url(#razHeroMaskGrad)" />
+          </mask>
+        </defs>
+        <text x="0" y="220" fontFamily="'Space Grotesk', sans-serif" fontWeight={700} fontSize={240} fill="url(#razHeroPattern)" mask="url(#razHeroMask)">
+          RAZ
+        </text>
+      </svg>
+    </div>
+  );
+}
+
 function Reveal({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
@@ -142,10 +210,10 @@ function CustomCursor() {
 }
 
 function Loader({ onDone }: { onDone: () => void }) {
-  const [done, setDone] = useState(false);
   const [hide, setHide] = useState(false);
   const [count, setCount] = useState(0);
   const [litLetters, setLitLetters] = useState(0);
+  const holeRef = useRef<SVGCircleElement>(null);
   const letters = ["R", "A", "Z"];
 
   useEffect(() => {
@@ -173,13 +241,19 @@ function Loader({ onDone }: { onDone: () => void }) {
           clearInterval(letterIv);
           setLitLetters(letters.length);
           setTimeout(() => {
-            setDone(true);
+            const hole = holeRef.current;
+            if (hole) {
+              const full = Math.hypot(window.innerWidth, window.innerHeight) * 0.8;
+              hole.style.transition = "r 1.15s cubic-bezier(0.76,0,0.24,1)";
+              requestAnimationFrame(() => hole.setAttribute("r", String(full)));
+            }
             try {
               sessionStorage.setItem("raz:loader-played", "1");
             } catch {
               /* noop */
             }
             onDone();
+            setTimeout(() => setHide(true), 1250);
           }, 350);
         }
         return next;
@@ -204,10 +278,21 @@ function Loader({ onDone }: { onDone: () => void }) {
 
   return (
     <div
-      className={`fixed inset-0 bg-background z-[10000] flex flex-col items-center justify-center overflow-hidden transition-transform duration-[900ms] ease-[cubic-bezier(0.76,0,0.24,1)] ${
-        done ? "-translate-y-full" : "translate-y-0"
-      }`}
+      className="fixed inset-0 bg-background z-[10000] flex flex-col items-center justify-center overflow-hidden"
+      style={{ WebkitMaskImage: "url(#razLoaderSvgMask)", maskImage: "url(#razLoaderSvgMask)" }}
     >
+      <svg width="0" height="0" className="absolute overflow-hidden">
+        <defs>
+          <filter id="razLoaderLiquidFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.010 0.016" numOctaves={2} seed={6} result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale={140} xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+          <mask id="razLoaderSvgMask" maskUnits="objectBoundingBox" x={0} y={0} width={1} height={1}>
+            <rect x="-10%" y="-10%" width="120%" height="120%" fill="white" />
+            <circle ref={holeRef} cx="50%" cy="50%" r={0} fill="black" filter="url(#razLoaderLiquidFilter)" />
+          </mask>
+        </defs>
+      </svg>
       {loaderImgs.map((img) => (
         <img
           key={img.seed}
@@ -311,11 +396,13 @@ export default function RazPortfolio() {
           </div>
           <div className="max-w-[1400px] mx-auto w-full px-5 md:px-16">
             <div className="w-full overflow-hidden">
-              <RazWordmark
-                className={`w-full h-auto block transition-transform duration-[1100ms] ease-[cubic-bezier(0.76,0,0.24,1)] ${
+              <div
+                className={`transition-transform duration-[1100ms] ease-[cubic-bezier(0.76,0,0.24,1)] ${
                   ready ? "translate-y-0" : "translate-y-full"
                 }`}
-              />
+              >
+                <LiquidWordmark />
+              </div>
             </div>
             <Reveal className="flex items-center justify-between flex-wrap gap-6 mt-7">
               <a
